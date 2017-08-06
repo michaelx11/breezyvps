@@ -1,7 +1,19 @@
 use std::process::Command;
 
+fn get_all_sshkey_ids() -> String {
+    let sshkey_ids = Command::new("sh")
+                                      .arg("-c")
+                                      .arg("doctl compute ssh-key list --no-header --format=ID")
+                                      .output()
+                                      .expect("Failed to list all ssh keys!");
+    let output_raw = sshkey_ids.stdout;
+    let output_str = String::from_utf8(output_raw).expect("Found invalid UTF-8 in sshkey ids");
+    let ids : Vec<&str> = output_str.lines().collect();
+    return ids.join(",");
+}
+
 pub fn create_droplet_by_name(name: &str) {
-    let create_str = format!("doctl compute droplet create {} --image=ubuntu-16-04-x64 --region=sfo1 --size=512mb --wait", name);
+    let create_str = format!("doctl compute droplet create {} --image=ubuntu-16-04-x64 --region=sfo1 --size=512mb --ssh-keys=\"{}\" --wait", name, get_all_sshkey_ids());
     println!("Running command:\n\t\t{}", create_str);
     // Create the actual droplet
     Command::new("sh")
@@ -57,7 +69,7 @@ pub fn destroy_droplet_by_name(name: &str) {
     // Get A record and delete it!
     let droplet_list_output = Command::new("sh")
                                       .arg("-c")
-                                      .arg("doctl compute domain records list one.haus -f --format Name,ID --no-header")
+                                      .arg("doctl compute domain records list one.haus --format Name,ID --no-header")
                                       .output()
                                       .expect("doctl list failed!");
     let output_raw = droplet_list_output.stdout;
@@ -88,4 +100,16 @@ pub fn destroy_droplet_by_name(name: &str) {
             .arg(record_str)
             .output()
             .expect("doctl delete record failed!");
+}
+
+pub fn create_sshkey(name: &str) {
+    // By default, always attempt to add a new key with [name] mapping to ~/.ssh/id_rsa.pub
+    let create_key_str = format!("doctl compute ssh-key create {} --public-key=\"$(cat ~/.ssh/id_rsa.pub)\"", name);
+    println!("Running command:\n\t\t{}", create_key_str);
+    // Create the actual droplet
+    Command::new("sh")
+            .arg("-c")
+            .arg(create_key_str)
+            .output()
+            .expect("Failed to create new key, it may already exist");
 }

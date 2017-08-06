@@ -23,6 +23,14 @@ fn sc_do(do_matches: &clap::ArgMatches) {
         }
         return;
     }
+    if let Some(create_ssh_key_matches) = do_matches.subcommand_matches("create_sshkey") {
+        if let Some(name) = create_ssh_key_matches.value_of("name") {
+            breezyvps::digitalocean::create_sshkey(name);
+        } else {
+            println!("Missing required sshkey name parameter!");
+        }
+        return;
+    }
 }
 
 fn main() {
@@ -44,6 +52,10 @@ fn main() {
             (@subcommand destroy_droplet =>
                 (about: "Destroy a droplet by name")
                 (@arg name: +required "Name of the droplet to destroy completely")
+            )
+            (@subcommand create_sshkey =>
+                (about: "Add an ssh key, which will be added upon instance creation")
+                (@arg name: +required "Name of the new ssh keys")
             )
         )
     ).get_matches();
