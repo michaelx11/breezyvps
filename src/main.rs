@@ -60,6 +60,7 @@ fn main() {
     // You can handle information about subcommands by requesting their matches by name
     // (as below), requesting just the name used, or both at the same time
     if let Some(matches) = matches.subcommand_matches("do") {
-	sc_do(matches);
+        sc_do(matches);
+        return;
     }
 }
