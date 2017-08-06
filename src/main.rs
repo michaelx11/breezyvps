@@ -35,13 +35,12 @@ fn sc_do(do_matches: &clap::ArgMatches) {
 
 fn main() {
     let matches = clap_app!(myapp =>
-        (version: "0.0.1")
+        (version: "0.1.1")
         (author: "Michael Xu <michaeljxu11@gmail.com>")
         (about: "One stop shop for common command line goodness")
         (@arg verbose: -v ... "Enable verbose output")
         (@subcommand do =>
             (about: "Doctl wrapper")
-            (version: "0.0.0")
             (author: "Michael Xu <michaeljxu11@gmail.com>")
             (@arg verbose: -v --verbose "Print test information verbosely")
             (@subcommand create_droplet =>
