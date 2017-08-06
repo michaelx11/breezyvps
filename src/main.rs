@@ -71,8 +71,12 @@ fn main() {
             (@arg verbose: -v --verbose "Print test information verbosely")
             (@subcommand create_droplet =>
                 (about: "Create a new droplet")
-                (@arg name: +required "Which configuration to use [small|medium|large]")
+                (@arg name: +required "Name of the droplet, must be unique")
                 (@arg config: -c "Which configuration to use [small|medium|large]")
+            )
+            (@subcommand destroy_droplet =>
+                (about: "Destroy a droplet by name")
+                (@arg name: +required "Name of the droplet to destroy completely")
             )
         )
     ).get_matches();
