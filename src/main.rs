@@ -2,12 +2,8 @@
 extern crate clap;
 extern crate breezyvps;
 
-fn sc_do(do_matches: &clap::ArgMatches) {
-    let mut verbose = false;
-    if do_matches.is_present("verbose") {
-        verbose = true;
-    }
-    if let Some(create_droplet_matches) = do_matches.subcommand_matches("create_droplet") {
+fn sc_doctl(doctl_matches: &clap::ArgMatches) {
+    if let Some(create_droplet_matches) = doctl_matches.subcommand_matches("create_droplet") {
         if let Some(name) = create_droplet_matches.value_of("name") {
             breezyvps::digitalocean::create_droplet_by_name(name);
         } else {
@@ -15,7 +11,7 @@ fn sc_do(do_matches: &clap::ArgMatches) {
         }
         return;
     }
-    if let Some(destroy_droplet_matches) = do_matches.subcommand_matches("destroy_droplet") {
+    if let Some(destroy_droplet_matches) = doctl_matches.subcommand_matches("destroy_droplet") {
         if let Some(name) = destroy_droplet_matches.value_of("name") {
             breezyvps::digitalocean::destroy_droplet_by_name(name);
         } else {
@@ -23,11 +19,26 @@ fn sc_do(do_matches: &clap::ArgMatches) {
         }
         return;
     }
-    if let Some(create_ssh_key_matches) = do_matches.subcommand_matches("create_sshkey") {
+    if let Some(create_ssh_key_matches) = doctl_matches.subcommand_matches("create_sshkey") {
         if let Some(name) = create_ssh_key_matches.value_of("name") {
             breezyvps::digitalocean::create_sshkey(name);
         } else {
             println!("Missing required sshkey name parameter!");
+        }
+        return;
+    }
+}
+
+fn sc_configure(configure_matches: &clap::ArgMatches) {
+    if let Some(nginx_matches) = configure_matches.subcommand_matches("nginx") {
+        if let Some(host) = nginx_matches.value_of("host") {
+            // Default 8080
+            let port = nginx_matches.value_of("port").unwrap_or("8080");
+            breezyvps::configure::install_nginx(host);
+            breezyvps::configure::add_nginx_host(host, port);
+            breezyvps::configure::install_letsencrypt_cert(host);
+        } else {
+            println!("Missing required host parameter!");
         }
         return;
     }
@@ -39,7 +50,7 @@ fn main() {
         (author: "Michael Xu <michaeljxu11@gmail.com>")
         (about: "One stop shop for common command line goodness")
         (@arg verbose: -v ... "Enable verbose output")
-        (@subcommand do =>
+        (@subcommand doctl =>
             (about: "Doctl wrapper")
             (author: "Michael Xu <michaeljxu11@gmail.com>")
             (@arg verbose: -v --verbose "Print test information verbosely")
@@ -57,6 +68,14 @@ fn main() {
                 (@arg name: +required "Name of the new ssh keys")
             )
         )
+        (@subcommand configure =>
+            (about: "Configure droplets / nodes")
+            (@subcommand nginx =>
+                (about: "Install nginx and configure for host")
+                (@arg host: +required "Host name of the droplet")
+                (@arg port: "Port to run webapp from (default: 8080)")
+            )
+        )
     ).get_matches();
 
 //    // Vary the output based on how many times the user used the "verbose" flag
@@ -70,8 +89,12 @@ fn main() {
 
     // You can handle information about subcommands by requesting their matches by name
     // (as below), requesting just the name used, or both at the same time
-    if let Some(matches) = matches.subcommand_matches("do") {
-        sc_do(matches);
+    if let Some(matches) = matches.subcommand_matches("doctl") {
+        sc_doctl(matches);
+        return;
+    }
+    if let Some(matches) = matches.subcommand_matches("configure") {
+        sc_configure(matches);
         return;
     }
 }

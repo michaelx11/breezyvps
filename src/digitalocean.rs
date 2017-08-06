@@ -2,10 +2,10 @@ use std::process::Command;
 
 fn get_all_sshkey_ids() -> String {
     let sshkey_ids = Command::new("sh")
-                                      .arg("-c")
-                                      .arg("doctl compute ssh-key list --no-header --format=ID")
-                                      .output()
-                                      .expect("Failed to list all ssh keys!");
+                             .arg("-c")
+                             .arg("doctl compute ssh-key list --no-header --format=ID")
+                             .output()
+                             .expect("Failed to list all ssh keys!");
     let output_raw = sshkey_ids.stdout;
     let output_str = String::from_utf8(output_raw).expect("Found invalid UTF-8 in sshkey ids");
     let ids : Vec<&str> = output_str.lines().collect();
