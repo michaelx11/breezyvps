@@ -9,8 +9,19 @@ fn sc_do(do_matches: &clap::ArgMatches) {
     }
     if let Some(create_droplet_matches) = do_matches.subcommand_matches("create_droplet") {
         if let Some(name) = create_droplet_matches.value_of("name") {
-            breezyvps::digitalocean::create_droplet_by_name(name)
+            breezyvps::digitalocean::create_droplet_by_name(name);
+        } else {
+            println!("Missing required name parameter!");
         }
+        return;
+    }
+    if let Some(destroy_droplet_matches) = do_matches.subcommand_matches("destroy_droplet") {
+        if let Some(name) = destroy_droplet_matches.value_of("name") {
+            breezyvps::digitalocean::destroy_droplet_by_name(name);
+        } else {
+            println!("Missing required name parameter!");
+        }
+        return;
     }
 }
 
