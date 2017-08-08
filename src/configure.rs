@@ -75,3 +75,6 @@ pub fn install_letsencrypt_cert(host: &str) {
 //                         .output()
 //                         .expect("Failed to run certbot!");
 }
+
+pub fn install_nodejs(host: &str) {
+}

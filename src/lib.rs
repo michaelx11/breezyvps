@@ -1,3 +1,4 @@
+pub mod command;
 pub mod digitalocean;
 pub mod configure;
 

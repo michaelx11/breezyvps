@@ -1,4 +1,5 @@
 use std::process::Command;
+use super::command;
 
 fn get_all_sshkey_ids() -> String {
     let sshkey_ids = Command::new("sh")
@@ -16,20 +17,20 @@ pub fn create_droplet_by_name(name: &str) {
     let create_str = format!("doctl compute droplet create {} --image=ubuntu-16-04-x64 --region=sfo1 --size=512mb --ssh-keys=\"{}\" --wait", name, get_all_sshkey_ids());
     println!("Running command:\n\t\t{}", create_str);
     // Create the actual droplet
-    Command::new("sh")
-            .arg("-c")
-            .arg(create_str)
-            .output()
-            .expect("doctl create failed!");
-    // Get the IP address!
-    let droplet_list_output = Command::new("sh")
-                                      .arg("-c")
-                                      .arg("doctl compute droplet list --format Name,PublicIPv4,PublicIPv6,Status")
-                                      .output()
-                                      .expect("doctl list droplets failed!");
-    let output_raw = droplet_list_output.stdout;
-    let output_str = String::from_utf8(output_raw).expect("Found invalid UTF-8 in droplet list output");
-    let lines = output_str.lines();
+    let result = command::run_host_cmd(&create_str);
+    if !result.success {
+        println!("Failed, with stderr:\n\n{}", result.stderr);
+        return;
+    }
+
+    let list_command = "doctl compute droplet list --format Name,PublicIPv4,PublicIPv6,Status";
+    println!("Running command:\n\t\t{}", list_command);
+    let droplet_result = command::run_host_cmd(&list_command);
+    if !droplet_result.success{
+        println!("Failed, with stderr:\n\n{}", droplet_result.stderr);
+        return;
+    }
+    let lines = droplet_result.stdout.lines();
     let mut ip_address = "";
     for line in lines {
         if line.starts_with(name) {
@@ -44,17 +45,16 @@ pub fn create_droplet_by_name(name: &str) {
         }
     }
     if ip_address.len() == 0 {
-        println!("Couldn't locate droplet in output:\n\n{}", output_str);
+        println!("Couldn't locate droplet in output:\n\n{}", droplet_result.stdout);
         return;
     }
     // Create a DNS record to point to the droplet
     let record_str = format!("doctl compute domain records create one.haus --record-type=A --record-data={} --record-name={}", ip_address, name);
     println!("Creating DNS record:\n\t\t{}", record_str);
-    Command::new("sh")
-            .arg("-c")
-            .arg(record_str)
-            .output()
-            .expect("doctl create record failed!");
+    let create_record_result = command::run_host_cmd(&record_str);
+    if !create_record_result.success{
+        println!("Failed, with stderr:\n\n{}", create_record_result.stderr);
+    }
 }
 
 pub fn destroy_droplet_by_name(name: &str) {
