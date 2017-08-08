@@ -2,14 +2,13 @@ use std::process::Command;
 use super::command;
 
 fn get_all_sshkey_ids() -> String {
-    let sshkey_ids = Command::new("sh")
-                             .arg("-c")
-                             .arg("doctl compute ssh-key list --no-header --format=ID")
-                             .output()
-                             .expect("Failed to list all ssh keys!");
-    let output_raw = sshkey_ids.stdout;
-    let output_str = String::from_utf8(output_raw).expect("Found invalid UTF-8 in sshkey ids");
-    let ids : Vec<&str> = output_str.lines().collect();
+    let get_sshkeys_cmd = "doctl compute ssh-key list --no-header --format=ID";
+    println!("Running command:\n\t\t{}", get_sshkeys_cmd);
+    let result = command::run_host_cmd(&get_sshkeys_cmd);
+    if !result.success {
+        println!("Failed to get sshkeys with stderr:\n\n{}", result.stderr);
+    }
+    let ids : Vec<&str> = result.stdout.lines().collect();
     return ids.join(",");
 }
 
@@ -107,9 +106,8 @@ pub fn create_sshkey(name: &str) {
     let create_key_str = format!("doctl compute ssh-key create {} --public-key=\"$(cat ~/.ssh/id_rsa.pub)\"", name);
     println!("Running command:\n\t\t{}", create_key_str);
     // Create the actual droplet
-    Command::new("sh")
-            .arg("-c")
-            .arg(create_key_str)
-            .output()
-            .expect("Failed to create new key, it may already exist");
+    let result = command::run_host_cmd(&create_key_str);
+    if !result.success {
+        println!("Failed with stderr:\n\n{}", result.stderr);
+    }
 }
