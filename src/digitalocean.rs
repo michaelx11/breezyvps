@@ -1,4 +1,3 @@
-use std::process::Command;
 use super::command;
 
 fn get_all_sshkey_ids() -> String {
@@ -60,20 +59,19 @@ pub fn destroy_droplet_by_name(name: &str) {
     let create_str = format!("doctl compute droplet delete -f {}", name);
     println!("Running command:\n\t\t{}", create_str);
     // Create the actual droplet
-    Command::new("sh")
-            .arg("-c")
-            .arg(create_str)
-            .output()
-            .expect("doctl delete failed!");
+    let result = command::run_host_cmd(&create_str);
+    if !result.success {
+        println!("Failed with stderr:\n\n{}", result.stderr);
+        return
+    }
+    let get_record_cmd = "doctl compute domain records list one.haus --format Name,ID --no-header";
     // Get A record and delete it!
-    let droplet_list_output = Command::new("sh")
-                                      .arg("-c")
-                                      .arg("doctl compute domain records list one.haus --format Name,ID --no-header")
-                                      .output()
-                                      .expect("doctl list failed!");
-    let output_raw = droplet_list_output.stdout;
-    let output_str = String::from_utf8(output_raw).expect("Found invalid UTF-8 in droplet list output");
-    let lines = output_str.lines();
+    let record_result = command::run_host_cmd(&get_record_cmd);
+    if !record_result.success {
+        println!("Failed with stderr:\n\n{}", record_result.stderr);
+        return
+    }
+    let lines = record_result.stdout.lines();
     let mut record_to_delete = "";
     for line in lines {
         let fields : Vec<&str> = line.split_whitespace().collect();
@@ -88,17 +86,17 @@ pub fn destroy_droplet_by_name(name: &str) {
         }
     }
     if record_to_delete.len() == 0 {
-        println!("Couldn't locate record for [{}] in output:\n\n{}", name, output_str);
+        println!("Couldn't locate record for [{}] in output:\n\n{}", name, record_result.stdout);
         return;
     }
     // Create a DNS record to point to the droplet
-    let record_str = format!("doctl compute domain records delete one.haus {}", record_to_delete);
-    println!("Deleting DNS record:\n\t\t{}", record_str);
-    Command::new("sh")
-            .arg("-c")
-            .arg(record_str)
-            .output()
-            .expect("doctl delete record failed!");
+    let delete_record_cmd = format!("doctl compute domain records delete one.haus {}", record_to_delete);
+    println!("Deleting DNS record:\n\t\t{}", delete_record_cmd);
+    let delete_result = command::run_host_cmd(&delete_record_cmd);
+    if !delete_result.success {
+        println!("Failed with stderr:\n\n{}", delete_result.stderr);
+        return
+    }
 }
 
 pub fn create_sshkey(name: &str) {

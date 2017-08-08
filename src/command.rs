@@ -7,10 +7,6 @@ pub struct Result {
     pub stderr: String
 }
 
-pub fn run_ssh_cmd(host: &str, command_str: &str) {
-    // unimplemented
-}
-
 pub fn run_host_cmd(command_str: &str) -> Result {
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")

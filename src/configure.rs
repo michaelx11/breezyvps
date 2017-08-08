@@ -1,16 +1,15 @@
-use std::process::Command;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use super::command;
 
 pub fn install_nginx(host: &str) {
     let nginx_install_command = format!("ssh root@{} 'apt-get update && apt-get install -y nginx'", host);
     println!("Running:\n\t\t{}", nginx_install_command);
-    let result = Command::new("sh")
-                         .arg("-c")
-                         .arg(nginx_install_command)
-                         .output()
-                         .expect("Failed to install nginx");
+    let result = command::run_host_cmd(&nginx_install_command);
+    if !result.success {
+        println!("{}", result.stderr);
+    }
 }
 
 fn create_host_file(host: &str, port: &str) -> String {
@@ -52,29 +51,19 @@ pub fn add_nginx_host(host: &str, port: &str) {
     // TODO: cleanup host file after scp
     let conf_create_command = format!("scp {} root@{}:/etc/nginx/conf.d/", filename, host);
     println!("Running:\n\t\t{}", conf_create_command);
-    let result = Command::new("sh")
-                         .arg("-c")
-                         .arg(conf_create_command)
-                         .output()
-                         .expect("Failed to copy over conf!");
+    let result = command::run_host_cmd(&conf_create_command);
+    if !result.success {
+        println!("{}", result.stderr);
+    }
 }
 
 pub fn install_letsencrypt_cert(host: &str) {
     let install_certbot_cmd = format!("ssh root@{} 'add-apt-repository ppa:certbot/certbot && apt-get update && apt-get install -y python-certbot-nginx'", host);
     println!("Running:\n\t\t{}", install_certbot_cmd);
-    let install_result = Command::new("sh")
-                         .arg("-c")
-                         .arg(install_certbot_cmd)
-                         .output()
-                         .expect("Failed to install certbot");
+    let result = command::run_host_cmd(&install_certbot_cmd);
+    if !result.success {
+        println!("{}", result.stderr);
+    }
     let run_certbot_command = format!("ssh root@{} 'certbot --nginx -d {}'", host, host);
     println!("Please run:\n\t{}", run_certbot_command);
-//    let certbot_result = Command::new("sh")
-//                         .arg("-c")
-//                         .arg(run_certbot_command)
-//                         .output()
-//                         .expect("Failed to run certbot!");
-}
-
-pub fn install_nodejs(host: &str) {
 }
