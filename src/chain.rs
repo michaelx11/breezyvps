@@ -25,17 +25,17 @@ impl<'a> CommandChain<'a> {
         }
     }
 
-    pub fn result_proc(&'a mut self, f: &'a Fn(&command::Result) -> command::Result) -> &'a mut CommandChain {
+    pub fn result_proc(mut self, f: &'a Fn(&command::Result) -> command::Result) -> Self {
         self.commands.push(Item::ResultProcessor(f));
         self
     }
 
-    pub fn cmd(&'a mut self, command_string: &str) -> &'a mut CommandChain {
+    pub fn cmd(mut self, command_string: &str) -> Self {
         self.commands.push(Item::FatalCommand(String::from(command_string)));
         self
     }
 
-    pub fn cmd_nonfatal(&'a mut self, command_string: &str) -> &'a mut CommandChain {
+    pub fn cmd_nonfatal(mut self, command_string: &str) -> Self {
         self.commands.push(Item::NonFatalCommand(String::from(command_string)));
         self
     }
@@ -51,7 +51,7 @@ impl<'a> CommandChain<'a> {
     }
 
     // Executes the chain and returns self, with vector reset
-    pub fn execute(&'a mut self) -> CommandChain {
+    pub fn execute(mut self) -> Self {
         for item in self.commands.iter() {
             match item {
                 &Item::FatalCommand(ref s) => {
