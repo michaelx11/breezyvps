@@ -14,13 +14,13 @@ impl CommandChain {
         }
     }
 
-    pub fn chain<'a>(&'a mut self, command_string: String) -> &'a mut CommandChain {
-        self.commands.push(command_string);
+    pub fn chain<'a>(&'a mut self, command_string: &str) -> &'a mut CommandChain {
+        self.commands.push(String::from(command_string));
         self
     }
 
-    pub fn chain_nonfatal<'a>(&'a mut self, command_string: String) -> &'a mut CommandChain {
-        self.commands.push(command_string);
+    pub fn chain_nonfatal<'a>(&'a mut self, command_string: &str) -> &'a mut CommandChain {
+        self.commands.push(String::from(command_string));
         self
     }
 
@@ -32,6 +32,7 @@ impl CommandChain {
                info!("Stdout:{}", result.stdout);
             } else {
                warn!("Stderr:{}", result.stderr);
+               return // TODO: only return if fatal
             }
         }
     }

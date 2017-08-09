@@ -109,13 +109,4 @@ fn main() {
         sc_configure(matches);
         return;
     }
-
-    let mut x = breezyvps::chain::CommandChain {
-        commands: std::vec::Vec::new(),
-        log_level: 0
-    };
-    x.chain(String::from("echo hello"))
-        .chain(String::from("test2"))
-        .chain(String::from("test3"))
-        .execute();
 }
