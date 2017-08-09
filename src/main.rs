@@ -111,7 +111,7 @@ fn main() {
         return;
     }
 
-    let mut x = breezyvps::chain::CommandChain::new();
+    let x = breezyvps::chain::CommandChain::new();
     x.cmd("echo hello")
         .cmd("test2")
         .cmd("test3")
