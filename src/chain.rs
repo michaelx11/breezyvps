@@ -5,7 +5,7 @@ pub enum Item<'a> {
     FatalCommand(String),
     NonFatalCommand(String),
     ResultProcessor(&'a Fn(&command::Result) -> command::Result),
-    CommandModifier(&'a Fn(&'a command::Result, Option<&'a mut Item>) -> Option<&'a mut Item<'a>>)
+    CommandModifier(&'a Fn(&command::Result, Option<&'a mut Item>) -> Option<&'a mut Item<'a>>)
 }
 
 pub struct CommandChain<'a> {
@@ -47,7 +47,6 @@ impl<'a> CommandChain<'a> {
         result
     }
 
-    // TODO: Return an actual Result here
     pub fn execute(&'a mut self) -> Option<command::Result> {
         for item in self.commands.iter() {
             match item {
@@ -73,6 +72,7 @@ impl<'a> CommandChain<'a> {
                     };
                 },
                 &Item::CommandModifier(f) => {
+                    // TODO: implement me!
                 }
             }
         }
