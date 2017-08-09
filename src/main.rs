@@ -138,6 +138,7 @@ fn main() {
     let res = breezyvps::chain::CommandChain::new()
         .cmd("echo hello")
         .result_proc(&processing_func)
+        .execute()
         .execute();
 
     println!("{}", res.result.unwrap().stdout);
