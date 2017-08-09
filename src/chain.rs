@@ -1,39 +1,85 @@
 use super::command;
 
-pub struct CommandChain {
-    pub commands: Vec<String>,
-    pub log_level: u32
+// An item on the chain
+pub enum Item<'a> {
+    FatalCommand(String),
+    NonFatalCommand(String),
+    ResultProcessor(&'a Fn(&command::Result) -> command::Result),
+    CommandModifier(&'a Fn(&'a command::Result, Option<&'a mut Item>) -> Option<&'a mut Item<'a>>)
 }
 
-impl CommandChain {
+pub struct CommandChain<'a> {
+    pub commands: Vec<Item<'a>>,
+    current_result: Option<command::Result>
+}
 
-    pub fn new() -> CommandChain {
+impl<'a> CommandChain<'a> {
+
+    pub fn new() -> CommandChain<'a> {
         CommandChain {
             commands: ::std::vec::Vec::new(),
-            log_level: 0
+            current_result: None
         }
     }
 
-    pub fn chain<'a>(&'a mut self, command_string: &str) -> &'a mut CommandChain {
-        self.commands.push(String::from(command_string));
+    pub fn result_proc(&'a mut self, f: &'a Fn(&command::Result) -> command::Result) -> &'a mut CommandChain {
+        self.commands.push(Item::ResultProcessor(f));
         self
     }
 
-    pub fn chain_nonfatal<'a>(&'a mut self, command_string: &str) -> &'a mut CommandChain {
-        self.commands.push(String::from(command_string));
+    pub fn cmd(&'a mut self, command_string: &str) -> &'a mut CommandChain {
+        self.commands.push(Item::FatalCommand(String::from(command_string)));
         self
+    }
+
+    pub fn cmd_nonfatal(&'a mut self, command_string: &str) -> &'a mut CommandChain {
+        self.commands.push(Item::NonFatalCommand(String::from(command_string)));
+        self
+    }
+
+    fn run_command(cmd_str : &str) -> command::Result {
+        let result = command::run_host_cmd(cmd_str);
+        if result.success {
+            info!("stdout:{}", result.stdout);
+        } else {
+            warn!("stderr:{}", result.stderr);
+        }
+        result
     }
 
     // TODO: Return an actual Result here
-    pub fn execute(&self) {
-        for cmd_str in self.commands.iter() {
-            let result = command::run_host_cmd(&cmd_str);
-            if result.success {
-               info!("Stdout:{}", result.stdout);
-            } else {
-               warn!("Stderr:{}", result.stderr);
-               return // TODO: only return if fatal
+    pub fn execute(&'a mut self) -> Option<command::Result> {
+        for item in self.commands.iter() {
+            match item {
+                &Item::FatalCommand(ref s) => {
+                    let result = CommandChain::run_command(s);
+                    if !result.success {
+                        return None;
+                    }
+                    self.current_result = Some(result);
+                },
+                &Item::NonFatalCommand(ref s) => {
+                    let result = CommandChain::run_command(s);
+                    self.current_result = Some(result);
+                },
+                &Item::ResultProcessor(f) => {
+                    self.current_result = {
+                        if let Some(ref mut curr_res) = self.current_result {
+                            Some(f(&curr_res))
+                        } else {
+                            warn!("Executing ResultProcessor with no current result is a no-op!");
+                            None
+                        }
+                    };
+                },
+                &Item::CommandModifier(f) => {
+                }
             }
+        }
+        if let Some(ref curr_res) = self.current_result {
+            return Some(curr_res.clone())
+        } else {
+            None
         }
     }
 }

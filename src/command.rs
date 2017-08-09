@@ -1,5 +1,6 @@
 use std::process::Command;
 
+#[derive(Clone)]
 pub struct Result {
     pub exit_code: Option<i32>,
     pub success: bool,

@@ -5,6 +5,7 @@ extern crate simplelog;
 
 use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter};
 use std::fs::File;
+use breezyvps::command;
 
 fn sc_doctl(doctl_matches: &clap::ArgMatches) {
     if let Some(create_droplet_matches) = doctl_matches.subcommand_matches("create_droplet") {
@@ -109,4 +110,34 @@ fn main() {
         sc_configure(matches);
         return;
     }
+
+    let mut x = breezyvps::chain::CommandChain::new();
+    x.cmd("echo hello")
+        .cmd("test2")
+        .cmd("test3")
+        .execute();
+
+    breezyvps::chain::CommandChain::new()
+        .cmd_nonfatal("echo hello")
+        .cmd_nonfatal("restinpeace")
+        .cmd("echo yo")
+        .execute();
+
+
+    let res = breezyvps::chain::CommandChain::new()
+        .cmd("echo hello")
+        .result_proc(&|res: &command::Result| -> command::Result {
+            let mut extra_stdout = res.stdout.clone();
+            extra_stdout.push_str(" + processing");
+
+            command::Result {
+                exit_code: res.exit_code,
+                success: res.success,
+                stdout: extra_stdout,
+                stderr: res.stderr.clone()
+            }
+        })
+        .execute();
+
+    println!("{}", res.unwrap().stdout);
 }
