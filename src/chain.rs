@@ -1,6 +1,7 @@
 use super::command;
 
 // An item on the chain
+#[derive(Clone)]
 pub enum Item<'a> {
     FatalCommand(String),
     NonFatalCommand(String),
@@ -10,15 +11,17 @@ pub enum Item<'a> {
 
 pub struct CommandChain<'a> {
     pub commands: Vec<Item<'a>>,
-    current_result: Option<command::Result>
+    pub old_commands: Vec<Item<'a>>,
+    pub result: Option<command::Result>
 }
 
 impl<'a> CommandChain<'a> {
 
-    pub fn new() -> CommandChain<'a> {
+    pub fn new() -> Self {
         CommandChain {
-            commands: ::std::vec::Vec::new(),
-            current_result: None
+            commands: Vec::new(),
+            old_commands: Vec::new(),
+            result: None
         }
     }
 
@@ -47,23 +50,25 @@ impl<'a> CommandChain<'a> {
         result
     }
 
-    pub fn execute(&'a mut self) -> Option<command::Result> {
+    // Executes the chain and returns self, with vector reset
+    pub fn execute(&'a mut self) -> CommandChain {
         for item in self.commands.iter() {
             match item {
                 &Item::FatalCommand(ref s) => {
                     let result = CommandChain::run_command(s);
                     if !result.success {
-                        return None;
+                        self.result = Some(result);
+                        break
                     }
-                    self.current_result = Some(result);
+                    self.result = Some(result);
                 },
                 &Item::NonFatalCommand(ref s) => {
                     let result = CommandChain::run_command(s);
-                    self.current_result = Some(result);
+                    self.result = Some(result);
                 },
                 &Item::ResultProcessor(f) => {
-                    self.current_result = {
-                        if let Some(ref mut curr_res) = self.current_result {
+                    self.result = {
+                        if let Some(ref mut curr_res) = self.result {
                             Some(f(&curr_res))
                         } else {
                             warn!("Executing ResultProcessor with no current result is a no-op!");
@@ -76,10 +81,10 @@ impl<'a> CommandChain<'a> {
                 }
             }
         }
-        if let Some(ref curr_res) = self.current_result {
-            return Some(curr_res.clone())
-        } else {
-            None
+        CommandChain {
+            commands: Vec::new(),
+            old_commands: self.commands.clone(),
+            result: self.result.clone()
         }
     }
 }

@@ -139,5 +139,5 @@ fn main() {
         })
         .execute();
 
-    println!("{}", res.unwrap().stdout);
+    println!("{}", res.result.unwrap().stdout);
 }
