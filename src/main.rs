@@ -1,6 +1,10 @@
 #[macro_use]
 extern crate clap;
 extern crate breezyvps;
+extern crate simplelog;
+
+use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter};
+use std::fs::File;
 
 fn sc_doctl(doctl_matches: &clap::ArgMatches) {
     if let Some(create_droplet_matches) = doctl_matches.subcommand_matches("create_droplet") {
@@ -45,8 +49,16 @@ fn sc_configure(configure_matches: &clap::ArgMatches) {
 }
 
 fn main() {
+    // Configure logging with simplelogger
+    CombinedLogger::init(
+        vec![
+            TermLogger::new(LogLevelFilter::Info, Config::default()).unwrap(),
+            WriteLogger::new(LogLevelFilter::Info, Config::default(), File::create("breezyvps.log").unwrap()),
+        ]
+    ).unwrap();
+
     let matches = clap_app!(myapp =>
-        (version: "0.1.2")
+        (version: "0.1.3")
         (author: "Michael Xu <michaeljxu11@gmail.com>")
         (about: "One stop shop for common command line goodness")
         (@arg verbose: -v ... "Enable verbose output")
@@ -97,4 +109,13 @@ fn main() {
         sc_configure(matches);
         return;
     }
+
+    let mut x = breezyvps::chain::CommandChain {
+        commands: std::vec::Vec::new(),
+        log_level: 0
+    };
+    x.chain(String::from("echo hello"))
+        .chain(String::from("test2"))
+        .chain(String::from("test3"))
+        .execute();
 }
