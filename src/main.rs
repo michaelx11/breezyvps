@@ -123,20 +123,21 @@ fn main() {
         .cmd("echo yo")
         .execute();
 
+    let processing_func = |res: &command::Result| -> command::Result {
+        let mut extra_stdout = res.stdout.clone();
+        extra_stdout.push_str(" + processing");
+
+        command::Result {
+            exit_code: res.exit_code,
+            success: res.success,
+            stdout: extra_stdout,
+            stderr: res.stderr.clone()
+        }
+    };
 
     let res = breezyvps::chain::CommandChain::new()
         .cmd("echo hello")
-        .result_proc(&|res: &command::Result| -> command::Result {
-            let mut extra_stdout = res.stdout.clone();
-            extra_stdout.push_str(" + processing");
-
-            command::Result {
-                exit_code: res.exit_code,
-                success: res.success,
-                stdout: extra_stdout,
-                stderr: res.stderr.clone()
-            }
-        })
+        .result_proc(&processing_func)
         .execute();
 
     println!("{}", res.result.unwrap().stdout);
