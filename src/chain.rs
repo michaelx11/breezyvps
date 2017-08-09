@@ -81,10 +81,8 @@ impl<'a> CommandChain<'a> {
                 }
             }
         }
-        CommandChain {
-            commands: Vec::new(),
-            old_commands: self.commands.clone(),
-            result: self.result.clone()
-        }
+        self.old_commands.extend(self.commands.clone());
+        self.commands = Vec::new();
+        self
     }
 }
