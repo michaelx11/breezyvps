@@ -30,6 +30,16 @@ impl<'a> CommandChain<'a> {
         self
     }
 
+    pub fn result_mapped_cmd(mut self, f: &'a Fn(&command::Result, String) -> String, command_string: &str) -> Self {
+        self.commands.push(Item::ResultMappedCommand(f, command_string.to_string(), true));
+        self
+    }
+
+    pub fn result_mapped_cmd_nonfatal(mut self, f: &'a Fn(&command::Result, String) -> String, command_string: &str) -> Self {
+        self.commands.push(Item::ResultMappedCommand(f, command_string.to_string(), false));
+        self
+    }
+
     pub fn cmd(mut self, command_string: &str) -> Self {
         self.commands.push(Item::FatalCommand(String::from(command_string)));
         self
