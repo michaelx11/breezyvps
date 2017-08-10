@@ -10,12 +10,6 @@ pub fn create_droplet_by_name(name: &str) {
     };
 
     let ip_address_mapping_func = |res: &command::Result, cmd_str: String| -> String {
-        let new_cmd = str::replace(&cmd_str, "%ip_address%", &res.stdout);
-        new_cmd.to_string()
-    };
-
-    // Get ip address from stdout
-    let ip_address_extractor = |res: &command::Result| -> command::Result {
         let mut ip_address : Option<String> = None;
         let res_stdout = res.stdout.clone();
         let lines = res_stdout.lines();
@@ -32,21 +26,11 @@ pub fn create_droplet_by_name(name: &str) {
         }
         if ip_address == None {
             error!("Couldn't locate droplet in output: {}", res_stdout);
-            return command::Result {
-                exit_code: None,
-                success: false,
-                stdout: "".to_string(),
-                stderr: res.stderr.clone()
-            }
+            return "--will fail--".to_string()
         }
 
-        command::Result {
-            exit_code: res.exit_code,
-            success: res.success,
-            // We check for None above
-            stdout: ip_address.unwrap().trim().to_string(),
-            stderr: res.stderr.clone()
-        }
+        let new_cmd = str::replace(&cmd_str, "%ip_address%", &ip_address.unwrap());
+        new_cmd.to_string()
     };
 
     let create_str = format!("doctl compute droplet create {} --image=ubuntu-16-04-x64 --region=sfo1 --size=512mb --ssh-keys=\"%ssh_keys%\" --wait", name);
@@ -56,7 +40,6 @@ pub fn create_droplet_by_name(name: &str) {
         .cmd("doctl compute ssh-key list --no-header --format=ID")
         .result_mapped_cmd(&ssh_key_mapping_func, &create_str)
         .cmd("doctl compute droplet list --format Name,PublicIPv4,PublicIPv6,Status")
-        .result_proc(&ip_address_extractor)
         .result_mapped_cmd(&ip_address_mapping_func, &record_str)
         .execute();
 }
@@ -96,7 +79,7 @@ pub fn destroy_droplet_by_name(name: &str) {
         return;
     }
     // Create a DNS record to point to the droplet
-    let delete_record_cmd = format!("doctl compute domain records delete one.haus {}", record_to_delete);
+    let delete_record_cmd = format!("doctl compute domain records delete -f one.haus {}", record_to_delete);
     println!("Deleting DNS record:\n\t\t{}", delete_record_cmd);
     let delete_result = command::run_host_cmd(&delete_record_cmd);
     if !delete_result.success {
