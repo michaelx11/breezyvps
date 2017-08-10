@@ -53,12 +53,12 @@ fn main() {
     CombinedLogger::init(
         vec![
             TermLogger::new(LogLevelFilter::Info, Config::default()).unwrap(),
-            WriteLogger::new(LogLevelFilter::Info, Config::default(), File::create("breezyvps.log").unwrap()),
+            WriteLogger::new(LogLevelFilter::Info, Config::default(), File::create("/tmp/breezyvps.log").unwrap()),
         ]
     ).unwrap();
 
     let matches = clap_app!(myapp =>
-        (version: "0.1.3")
+        (version: "0.1.4")
         (author: "Michael Xu <michaeljxu11@gmail.com>")
         (about: "One stop shop for common command line goodness")
         (@arg verbose: -v ... "Enable verbose output")
