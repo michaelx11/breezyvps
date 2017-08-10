@@ -52,10 +52,11 @@ impl<'a> CommandChain<'a> {
 
     fn run_command(cmd_str : &str) -> command::Result {
         let result = command::run_host_cmd(cmd_str);
+        info!("Running: {}", cmd_str);
         if result.success {
-            info!("stdout:{}", result.stdout);
+            info!("stdout: {}", result.stdout);
         } else {
-            warn!("stderr:{}", result.stderr);
+            warn!("stderr: {}", result.stderr);
         }
         result
     }
