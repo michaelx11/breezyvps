@@ -5,8 +5,8 @@ use super::command;
 pub enum Item<'a> {
     FatalCommand(String),
     NonFatalCommand(String),
+    ResultMappedCommand(&'a Fn(&command::Result, String) -> String, String, bool),
     ResultProcessor(&'a Fn(&command::Result) -> command::Result),
-    CommandModifier(&'a Fn(&command::Result, Option<&'a mut Item>) -> Option<&'a mut Item<'a>>)
 }
 
 pub struct CommandChain<'a> {
@@ -76,8 +76,21 @@ impl<'a> CommandChain<'a> {
                         }
                     };
                 },
-                &Item::CommandModifier(f) => {
-                    // TODO: implement me!
+                &Item::ResultMappedCommand(f, ref s, is_fatal) => {
+                    let mapped_command : String = {
+                        if let Some(ref mut curr_res) = self.result {
+                            f(&curr_res, s.to_string())
+                        } else {
+                            warn!("Executing ResultMappedCommand with no current result is a no-op!");
+                            s.to_string()
+                        }
+                    };
+                    let result = CommandChain::run_command(&mapped_command);
+                    if is_fatal && !result.success {
+                        self.result = Some(result);
+                        break
+                    }
+                    self.result = Some(result);
                 }
             }
         }
