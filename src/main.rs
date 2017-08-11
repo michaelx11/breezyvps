@@ -9,7 +9,11 @@ use std::fs::File;
 fn sc_doctl(doctl_matches: &clap::ArgMatches) {
     if let Some(create_droplet_matches) = doctl_matches.subcommand_matches("create_droplet") {
         if let Some(name) = create_droplet_matches.value_of("name") {
-            breezyvps::digitalocean::create_droplet_by_name(name);
+            breezyvps::digitalocean::create_droplet_by_name(
+                name,
+                // Both are unwrapped safely with defaults [sfo1, 512mb]
+                create_droplet_matches.value_of("region"),
+                create_droplet_matches.value_of("size"));
         } else {
             println!("Missing required name parameter!");
         }
@@ -69,7 +73,8 @@ fn main() {
             (@subcommand create_droplet =>
                 (about: "Create a new droplet")
                 (@arg name: +required "Name of the droplet, must be unique")
-                (@arg config: -c "Which configuration to use [small|medium|large]")
+                (@arg region: -r --region +takes_value "Which region? [sfo1, nyc1, etc..]")
+                (@arg size: -s --size +takes_value "Which size droplet? [512mb, 1gb, 2gb, 4gb, 8gb, 16gb, 32gb, 48gb, 64gb]")
             )
             (@subcommand destroy_droplet =>
                 (about: "Destroy a droplet by name")
