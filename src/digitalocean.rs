@@ -64,16 +64,16 @@ pub fn destroy_droplet_by_name(name: &str) {
             return "--will fail--".to_string()
         }
 
-        let new_cmd = str::replace(&cmd_str, "%record_id%%", &record_id.unwrap());
+        let new_cmd = str::replace(&cmd_str, "%record_id%", &record_id.unwrap());
         new_cmd.to_string()
     };
 
-    let create_str = format!("doctl compute droplet delete -f {}", name);
+    let delete_droplet_cmd = format!("doctl compute droplet delete -f {}", name);
     let delete_record_cmd = format!("doctl compute domain records delete -f one.haus %record_id%");
 
     // TODO: check the result heh
     let _ = chain::CommandChain::new()
-        .cmd(&create_str)
+        .cmd(&delete_droplet_cmd)
         .cmd("doctl compute domain records list one.haus --format Name,ID --no-header")
         .result_mapped_cmd(&record_id_extractor, &delete_record_cmd)
         .execute();
