@@ -67,3 +67,24 @@ pub fn install_letsencrypt_cert(host: &str) {
     let run_certbot_command = format!("ssh root@{} 'certbot --nginx -d {}'", host, host);
     println!("Please run:\n\t{}", run_certbot_command);
 }
+
+pub fn install_rust(host: &str) {
+    let install_rust_cmd = format!("ssh root@{} 'curl https://sh.rustup.rs -sSf | sh -s -- -y'", host);
+    let result = command::run_host_cmd(&install_rust_cmd);
+    if !result.success {
+        warn!("{}", result.stderr);
+    } else {
+        info!("{}", result.stdout);
+    }
+}
+
+pub fn install_python(host: &str) {
+    let install_python_cmd = format!("ssh root@{} 'apt-get update && apt-get install -y python'", host);
+    let result = command::run_host_cmd(&install_python_cmd);
+    if !result.success {
+        warn!("{}", result.stderr);
+    } else {
+        info!("{}", result.stdout);
+    }
+}
+

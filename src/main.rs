@@ -50,6 +50,30 @@ fn sc_configure(configure_matches: &clap::ArgMatches) {
         }
         return;
     }
+    if let Some(rust_matches) = configure_matches.subcommand_matches("rust") {
+        if let Some(host) = rust_matches.value_of("host") {
+            breezyvps::configure::install_rust(host);
+        } else {
+            println!("Missing required host parameter!");
+        }
+        return;
+    }
+    if let Some(python_matches) = configure_matches.subcommand_matches("python") {
+        if let Some(host) = python_matches.value_of("host") {
+            breezyvps::configure::install_python(host);
+        } else {
+            println!("Missing required host parameter!");
+        }
+        return;
+    }
+    if let Some(rust_matches) = configure_matches.subcommand_matches("rust") {
+        if let Some(host) = rust_matches.value_of("host") {
+            breezyvps::configure::install_rust(host);
+        } else {
+            println!("Missing required host parameter!");
+        }
+        return;
+    }
 }
 
 fn main() {
@@ -91,6 +115,14 @@ fn main() {
                 (about: "Install nginx and configure for host")
                 (@arg host: +required "Host name of the droplet")
                 (@arg port: "Port to run webapp from (default: 8080)")
+            )
+            (@subcommand rust =>
+                (about: "Install rust on an ubuntu host")
+                (@arg host: +required "Host name of the droplet")
+            )
+            (@subcommand python =>
+                (about: "Install python2.7 on an ubuntu host")
+                (@arg host: +required "Host name of the droplet")
             )
         )
     ).get_matches();
