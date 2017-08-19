@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use super::command;
+use super::chain;
 
 pub fn install_nginx(host: &str) {
     let nginx_install_command = format!("ssh root@{} 'apt-get update && apt-get install -y nginx'", host);
@@ -88,3 +89,9 @@ pub fn install_python(host: &str) {
     }
 }
 
+pub fn install_jekyll(host: &str) {
+    let _ = chain::CommandChain::new()
+        .cmd(&format!("ssh root@{} 'apt-get update && apt-get install -y rubygems build-essential ruby-dev'", host))
+        .cmd(&format!("ssh root@{} 'gem install jekyll bundler'", host))
+        .execute();
+}

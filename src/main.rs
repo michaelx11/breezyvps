@@ -74,6 +74,14 @@ fn sc_configure(configure_matches: &clap::ArgMatches) {
         }
         return;
     }
+    if let Some(jekyll_matches) = configure_matches.subcommand_matches("jekyll") {
+        if let Some(host) = jekyll_matches.value_of("host") {
+            breezyvps::configure::install_jekyll(host);
+        } else {
+            println!("Missing required host parameter!");
+        }
+        return;
+    }
 }
 
 fn main() {
@@ -122,6 +130,10 @@ fn main() {
             )
             (@subcommand python =>
                 (about: "Install python2.7 on an ubuntu host")
+                (@arg host: +required "Host name of the droplet")
+            )
+            (@subcommand jekyll =>
+                (about: "Install jekyll on an ubuntu host")
                 (@arg host: +required "Host name of the droplet")
             )
         )
