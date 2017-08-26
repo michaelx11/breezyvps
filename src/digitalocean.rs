@@ -1,7 +1,7 @@
 use super::command;
 use super::chain;
 
-pub fn create_droplet_by_name(name: &str, region: Option<&str>, size: Option<&str>) {
+pub fn create_droplet_by_name(name: &str, region: Option<&str>, size: Option<&str>, domain: Option<&str>) {
 
     let ssh_key_mapping_func = |res: &command::Result, cmd_str: String| -> String {
         let ids : Vec<&str> = res.stdout.lines().collect();
@@ -36,7 +36,7 @@ pub fn create_droplet_by_name(name: &str, region: Option<&str>, size: Option<&st
                              name,
                              region.unwrap_or("sfo1"),
                              size.unwrap_or("512mb"));
-    let record_str = format!("doctl compute domain records create one.haus --record-type=A --record-data=%ip_address% --record-name={}", name);
+    let record_str = format!("doctl compute domain records create {} --record-type=A --record-data=%ip_address% --record-name={}", domain.unwrap_or("one.haus"), name);
 
     // TODO: check the result heh
     let _ = chain::CommandChain::new()

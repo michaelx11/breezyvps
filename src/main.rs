@@ -13,7 +13,8 @@ fn sc_doctl(doctl_matches: &clap::ArgMatches) {
                 name,
                 // Both are unwrapped safely with defaults [sfo1, 512mb]
                 create_droplet_matches.value_of("region"),
-                create_droplet_matches.value_of("size"));
+                create_droplet_matches.value_of("size"),
+                create_droplet_matches.value_of("domain"));
         } else {
             println!("Missing required name parameter!");
         }
@@ -107,6 +108,7 @@ fn main() {
                 (@arg name: +required "Name of the droplet, must be unique")
                 (@arg region: -r --region +takes_value "Which region? [sfo1, nyc1, etc..]")
                 (@arg size: -s --size +takes_value "Which size droplet? [512mb, 1gb, 2gb, 4gb, 8gb, 16gb, 32gb, 48gb, 64gb]")
+                (@arg domain: -d --domain +takes_value "Which domain name? [best.haus,log.haus,swarm.link,swarmlink.com,util.in]")
             )
             (@subcommand destroy_droplet =>
                 (about: "Destroy a droplet by name")
