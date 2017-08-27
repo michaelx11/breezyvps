@@ -22,7 +22,8 @@ fn sc_doctl(doctl_matches: &clap::ArgMatches) {
     }
     if let Some(destroy_droplet_matches) = doctl_matches.subcommand_matches("destroy_droplet") {
         if let Some(name) = destroy_droplet_matches.value_of("name") {
-            breezyvps::digitalocean::destroy_droplet_by_name(name);
+            breezyvps::digitalocean::destroy_droplet_by_name(name,
+                destroy_droplet_matches.value_of("domain"));
         } else {
             println!("Missing required name parameter!");
         }
@@ -113,6 +114,7 @@ fn main() {
             (@subcommand destroy_droplet =>
                 (about: "Destroy a droplet by name")
                 (@arg name: +required "Name of the droplet to destroy completely")
+                (@arg domain: -d --domain +takes_value "Domain name, default one.haus")
             )
             (@subcommand create_sshkey =>
                 (about: "Add an ssh key, which will be added upon instance creation")

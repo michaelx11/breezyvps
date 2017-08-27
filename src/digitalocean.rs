@@ -47,7 +47,7 @@ pub fn create_droplet_by_name(name: &str, region: Option<&str>, size: Option<&st
         .execute();
 }
 
-pub fn destroy_droplet_by_name(name: &str) {
+pub fn destroy_droplet_by_name(name: &str, domain: Option<&str>) {
     let record_id_extractor = |res: &command::Result, cmd_str: String| -> String {
         let mut record_id : Option<String> = None;
         let res_stdout = res.stdout.clone();
@@ -72,7 +72,7 @@ pub fn destroy_droplet_by_name(name: &str) {
     };
 
     let delete_droplet_cmd = format!("doctl compute droplet delete -f {}", name);
-    let delete_record_cmd = format!("doctl compute domain records delete -f one.haus %record_id%");
+    let delete_record_cmd = format!("doctl compute domain records delete -f {} %record_id%", domain.unwrap_or("one.haus"));
 
     // TODO: check the result heh
     let _ = chain::CommandChain::new()
