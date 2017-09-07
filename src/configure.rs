@@ -95,3 +95,9 @@ pub fn install_jekyll(host: &str) {
         .cmd(&format!("ssh root@{} 'gem install jekyll bundler'", host))
         .execute();
 }
+
+pub fn renew_cert(host: &str) {
+    let _ = chain::CommandChain::new()
+        .cmd(&format!("ssh root@{} 'certbot --nginx renew'", host))
+        .execute();
+}

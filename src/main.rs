@@ -68,17 +68,17 @@ fn sc_configure(configure_matches: &clap::ArgMatches) {
         }
         return;
     }
-    if let Some(rust_matches) = configure_matches.subcommand_matches("rust") {
-        if let Some(host) = rust_matches.value_of("host") {
-            breezyvps::configure::install_rust(host);
+    if let Some(jekyll_matches) = configure_matches.subcommand_matches("jekyll") {
+        if let Some(host) = jekyll_matches.value_of("host") {
+            breezyvps::configure::install_jekyll(host);
         } else {
             println!("Missing required host parameter!");
         }
         return;
     }
-    if let Some(jekyll_matches) = configure_matches.subcommand_matches("jekyll") {
-        if let Some(host) = jekyll_matches.value_of("host") {
-            breezyvps::configure::install_jekyll(host);
+    if let Some(renew_matches) = configure_matches.subcommand_matches("renew") {
+        if let Some(host) = renew_matches.value_of("host") {
+            breezyvps::configure::renew_cert(host);
         } else {
             println!("Missing required host parameter!");
         }
@@ -138,6 +138,10 @@ fn main() {
             )
             (@subcommand jekyll =>
                 (about: "Install jekyll on an ubuntu host")
+                (@arg host: +required "Host name of the droplet")
+            )
+            (@subcommand renew =>
+                (about: "Renew letsencrypt cert on ubuntu host")
                 (@arg host: +required "Host name of the droplet")
             )
         )

@@ -71,13 +71,15 @@ pub fn destroy_droplet_by_name(name: &str, domain: Option<&str>) {
         new_cmd.to_string()
     };
 
+    let domain_name = domain.unwrap_or("one.haus");
     let delete_droplet_cmd = format!("doctl compute droplet delete -f {}", name);
-    let delete_record_cmd = format!("doctl compute domain records delete -f {} %record_id%", domain.unwrap_or("one.haus"));
+    let list_records_cmd = format!("doctl compute domain records list {} --format Name,ID --no-header", domain_name);
+    let delete_record_cmd = format!("doctl compute domain records delete -f {} %record_id%", domain_name);
 
     // TODO: check the result heh
     let _ = chain::CommandChain::new()
-        .cmd(&delete_droplet_cmd)
-        .cmd("doctl compute domain records list one.haus --format Name,ID --no-header")
+        .cmd_nonfatal(&delete_droplet_cmd)
+        .cmd(&list_records_cmd)
         .result_mapped_cmd(&record_id_extractor, &delete_record_cmd)
         .execute();
 }
