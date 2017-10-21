@@ -113,6 +113,7 @@ pub fn setup_iptables(host: &str) {
         .cmd(&format!("ssh root@{} 'iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT'", host))
         .cmd(&format!("ssh root@{} 'iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT'", host))
         .cmd(&format!("ssh root@{} 'iptables -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT'", host))
+        .cmd(&format!("ssh root@{} 'iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT'", host))
         .cmd(&format!("ssh root@{} 'iptables -P OUTPUT ACCEPT'", host))
         .cmd(&format!("ssh root@{} 'iptables -P INPUT DROP'", host))
         .execute();
