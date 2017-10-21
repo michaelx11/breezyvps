@@ -101,3 +101,19 @@ pub fn renew_cert(host: &str) {
         .cmd(&format!("ssh root@{} 'certbot --nginx renew'", host))
         .execute();
 }
+
+pub fn setup_iptables(host: &str) {
+    let _ = chain::CommandChain::new()
+        .cmd(&format!("ssh root@{} 'iptables -P INPUT ACCEPT'", host)) // First, switch input back to accept
+        .cmd(&format!("ssh root@{} 'iptables -F'", host))
+        .cmd(&format!("ssh root@{} 'iptables -A INPUT -p tcp --tcp-flags ALL NONE -j DROP'", host))
+        .cmd(&format!("ssh root@{} 'iptables -A INPUT -p tcp ! --syn -m state --state NEW -j DROP'", host))
+        .cmd(&format!("ssh root@{} 'iptables -A INPUT -p tcp --tcp-flags ALL ALL -j DROP'", host))
+        .cmd(&format!("ssh root@{} 'iptables -A INPUT -s 127.0.0.1 -j ACCEPT'", host))
+        .cmd(&format!("ssh root@{} 'iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT'", host))
+        .cmd(&format!("ssh root@{} 'iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT'", host))
+        .cmd(&format!("ssh root@{} 'iptables -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT'", host))
+        .cmd(&format!("ssh root@{} 'iptables -P OUTPUT ACCEPT'", host))
+        .cmd(&format!("ssh root@{} 'iptables -P INPUT DROP'", host))
+        .execute();
+}

@@ -84,6 +84,14 @@ fn sc_configure(configure_matches: &clap::ArgMatches) {
         }
         return;
     }
+    if let Some(iptables_matches) = configure_matches.subcommand_matches("setup_iptables") {
+        if let Some(host) = iptables_matches.value_of("host") {
+            breezyvps::configure::setup_iptables(host);
+        } else {
+            println!("Missing required host parameter!");
+        }
+        return;
+    }
 }
 
 fn main() {
@@ -142,6 +150,10 @@ fn main() {
             )
             (@subcommand renew =>
                 (about: "Renew letsencrypt cert on ubuntu host")
+                (@arg host: +required "Host name of the droplet")
+            )
+            (@subcommand setup_iptables =>
+                (about: "Setup iptables to only allow 80,443,22")
                 (@arg host: +required "Host name of the droplet")
             )
         )
