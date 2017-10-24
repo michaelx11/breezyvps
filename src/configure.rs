@@ -1,16 +1,13 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-use super::command;
 use super::chain;
 
 pub fn install_nginx(host: &str) {
     let nginx_install_command = format!("ssh root@{} 'apt-get update && apt-get install -y nginx'", host);
-    println!("Running:\n\t\t{}", nginx_install_command);
-    let result = command::run_host_cmd(&nginx_install_command);
-    if !result.success {
-        println!("{}", result.stderr);
-    }
+    let _ = chain::CommandChain::new()
+        .cmd(&nginx_install_command)
+        .execute();
 }
 
 fn create_host_file(host: &str, port: &str) -> String {
@@ -43,50 +40,40 @@ server {
     // These are hacks LOL, cause format! didn't seem to work with multiline string
     let mut contents = template.replace("{1}", host);
     contents = contents.replace("{2}", port);
-    file.write_all(contents.as_bytes());
+    assert!(file.write_all(contents.as_bytes()).is_ok());
     return filepath.clone();
 }
 
 pub fn add_nginx_host(host: &str, port: &str) {
     let filename = create_host_file(host, port);
-    // TODO: cleanup host file after scp
     let conf_create_command = format!("scp {} root@{}:/etc/nginx/conf.d/", filename, host);
-    println!("Running:\n\t\t{}", conf_create_command);
-    let result = command::run_host_cmd(&conf_create_command);
-    if !result.success {
-        println!("{}", result.stderr);
-    }
+    let _ = chain::CommandChain::new()
+        .cmd(&conf_create_command)
+        .cmd(&format!("rm {}", filename))
+        .execute();
 }
 
 pub fn install_letsencrypt_cert(host: &str) {
     let install_certbot_cmd = format!("ssh root@{} 'add-apt-repository ppa:certbot/certbot && apt-get update && apt-get install -y python-certbot-nginx'", host);
-    println!("Running:\n\t\t{}", install_certbot_cmd);
-    let result = command::run_host_cmd(&install_certbot_cmd);
-    if !result.success {
-        println!("{}", result.stderr);
-    }
+    let _ = chain::CommandChain::new()
+        .cmd(&install_certbot_cmd)
+        .execute();
     let run_certbot_command = format!("ssh root@{} 'certbot --nginx -d {}'", host, host);
     println!("Please run:\n\t{}", run_certbot_command);
 }
 
 pub fn install_rust(host: &str) {
     let install_rust_cmd = format!("ssh root@{} 'curl https://sh.rustup.rs -sSf | sh -s -- -y'", host);
-    let result = command::run_host_cmd(&install_rust_cmd);
-    if !result.success {
-        warn!("{}", result.stderr);
-    } else {
-        info!("{}", result.stdout);
-    }
+    let _ = chain::CommandChain::new()
+        .cmd(&install_rust_cmd)
+        .execute();
 }
 
 pub fn install_python(host: &str) {
     let install_python_cmd = format!("ssh root@{} 'apt-get update && apt-get install -y python'", host);
-    let result = command::run_host_cmd(&install_python_cmd);
-    if !result.success {
-        warn!("{}", result.stderr);
-    } else {
-        info!("{}", result.stdout);
-    }
+    let _ = chain::CommandChain::new()
+        .cmd(&install_python_cmd)
+        .execute();
 }
 
 pub fn install_jekyll(host: &str) {
