@@ -112,7 +112,7 @@ fn main() {
     ).unwrap();
 
     let matches = clap_app!(breezyvps =>
-        (version: "0.1.8")
+        (version: "0.2.0")
         (author: "Michael Xu <michaeljxu11@gmail.com>")
         (about: "One stop shop for common command line goodness")
         (@arg verbose: -v ... "Enable verbose output")
