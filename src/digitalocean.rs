@@ -1,6 +1,18 @@
 use super::command;
 use super::chain;
 
+fn get_subdomain_from_name(name: &str) -> &str {
+    // For subdomains, we only take the first element when split by ".", this allows
+    // us to create naked domain names or use the same subdomain across domains.
+    let components: Vec<&str> = name.split(".").collect();
+    if components.len() > 2 {
+        // If first throws an error after we've checked length, panic
+        components.first().unwrap()
+    } else {
+        &"@"
+    }
+}
+
 pub fn create_droplet_by_name(name: &str, region: Option<&str>, size: Option<&str>, domain: Option<&str>) {
 
     let ssh_key_mapping_func = |res: &command::Result, cmd_str: String| -> String {
@@ -32,13 +44,13 @@ pub fn create_droplet_by_name(name: &str, region: Option<&str>, size: Option<&st
         new_cmd.to_string()
     };
 
+    let subdomain = get_subdomain_from_name(name);
     let create_str = format!("doctl compute droplet create {} --image=ubuntu-16-04-x64 --region={} --size={} --ssh-keys=\"%ssh_keys%\" --wait",
                              name,
                              region.unwrap_or("sfo1"),
                              size.unwrap_or("512mb"));
-    let record_str = format!("doctl compute domain records create {} --record-type=A --record-data=%ip_address% --record-name={}", domain.unwrap_or("one.haus"), name);
+    let record_str = format!("doctl compute domain records create {} --record-type=A --record-data=%ip_address% --record-name={}", domain.unwrap_or("one.haus"), subdomain);
 
-    // TODO: check the result heh
     let _ = chain::CommandChain::new()
         .cmd("doctl compute ssh-key list --no-header --format=ID")
         .result_mapped_cmd(&ssh_key_mapping_func, &create_str)
@@ -48,11 +60,12 @@ pub fn create_droplet_by_name(name: &str, region: Option<&str>, size: Option<&st
 }
 
 pub fn destroy_droplet_by_name(name: &str, domain: Option<&str>) {
+    let subdomain = get_subdomain_from_name(name);
     let record_id_extractor = |res: &command::Result, cmd_str: String| -> String {
         let mut record_id : Option<String> = None;
         let res_stdout = res.stdout.clone();
         for line in res_stdout.lines() {
-            if line.starts_with(name) {
+            if line.starts_with(subdomain) {
                 debug!("Found: {}", line);
                 let fields : Vec<&str> = line.split_whitespace().collect();
                 if fields.len() < 2 {

@@ -121,8 +121,8 @@ fn main() {
             (author: "Michael Xu <michaeljxu11@gmail.com>")
             (@arg verbose: -v --verbose "Print test information verbosely")
             (@subcommand create_droplet =>
-                (about: "Create a new droplet")
-                (@arg name: +required "Name of the droplet, must be unique")
+                (about: "Create a new droplet and domain record.")
+                (@arg name: +required "Full DNS name of the droplet, must be unique. e.g. cloud.one.haus, one.haus")
                 (@arg region: -r --region +takes_value "Which region? [sfo1, nyc1, etc..]")
                 (@arg size: -s --size +takes_value "Which size droplet? [512mb, 1gb, 2gb, 4gb, 8gb, 16gb, 32gb, 48gb, 64gb]")
                 (@arg domain: -d --domain +takes_value "Which domain name? [best.haus,log.haus,swarm.link,swarmlink.com,util.in]")
