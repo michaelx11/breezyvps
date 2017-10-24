@@ -92,6 +92,14 @@ fn sc_configure(configure_matches: &clap::ArgMatches) {
         }
         return;
     }
+    if let Some(sqlite_matches) = configure_matches.subcommand_matches("install_sqlite3") {
+        if let Some(host) = sqlite_matches.value_of("host") {
+            breezyvps::configure::install_sqlite3(host);
+        } else {
+            println!("Missing required host parameter!");
+        }
+        return;
+    }
 }
 
 fn main() {
@@ -104,7 +112,7 @@ fn main() {
     ).unwrap();
 
     let matches = clap_app!(breezyvps =>
-        (version: "0.1.7")
+        (version: "0.1.8")
         (author: "Michael Xu <michaeljxu11@gmail.com>")
         (about: "One stop shop for common command line goodness")
         (@arg verbose: -v ... "Enable verbose output")
@@ -154,6 +162,10 @@ fn main() {
             )
             (@subcommand setup_iptables =>
                 (about: "Setup iptables to only allow 80,443,22")
+                (@arg host: +required "Host name of the droplet")
+            )
+            (@subcommand install_sqlite3 =>
+                (about: "Install sqlite3 on Ubuntu")
                 (@arg host: +required "Host name of the droplet")
             )
         )

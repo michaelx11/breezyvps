@@ -55,7 +55,9 @@ impl<'a> CommandChain<'a> {
         info!("Running: {}", cmd_str);
         if result.success {
             info!("stdout: {}", result.stdout);
+            info!("stderr: {}", result.stderr);
         } else {
+            warn!("stdout: {}", result.stdout);
             warn!("stderr: {}", result.stderr);
         }
         result
