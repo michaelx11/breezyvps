@@ -112,3 +112,10 @@ pub fn install_sqlite3(host: &str) {
         .cmd(&format!("ssh root@{} 'apt-get install -y sqlite3 libsqlite3-dev'", host))
         .execute();
 }
+
+pub fn install_nodejs(host: &str) {
+    let _ = chain::CommandChain::new()
+        .cmd(&format!("ssh root@{} 'apt-get update'", host))
+        .cmd(&format!("ssh root@{} 'apt-get install -y nodejs npm'", host))
+        .execute();
+}

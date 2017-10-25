@@ -13,7 +13,8 @@ fn get_subdomain_from_name(name: &str) -> &str {
     }
 }
 
-pub fn create_droplet_by_name(name: &str, region: Option<&str>, size: Option<&str>, domain: Option<&str>) {
+pub fn create_droplet_by_name(name: &str, region: Option<&str>, size: Option<&str>, domain: Option<&str>,
+                              enable_backups: Option<&str>) {
 
     let ssh_key_mapping_func = |res: &command::Result, cmd_str: String| -> String {
         let ids : Vec<&str> = res.stdout.lines().collect();
@@ -45,10 +46,19 @@ pub fn create_droplet_by_name(name: &str, region: Option<&str>, size: Option<&st
     };
 
     let subdomain = get_subdomain_from_name(name);
-    let create_str = format!("doctl compute droplet create {} --image=ubuntu-16-04-x64 --region={} --size={} --ssh-keys=\"%ssh_keys%\" --wait",
+    let enable_backups_string: &str;
+    match enable_backups {
+        Some("y") => enable_backups_string = "--enable-backups",
+        Some("Y") => enable_backups_string = "--enable-backups",
+        Some(_) => enable_backups_string = "",
+        _ => enable_backups_string = ""
+    }
+
+    let create_str = format!("doctl compute droplet create {} --image=ubuntu-16-04-x64 --region={} --size={} --ssh-keys=\"%ssh_keys%\" {} --wait",
                              name,
                              region.unwrap_or("sfo1"),
-                             size.unwrap_or("512mb"));
+                             size.unwrap_or("512mb"),
+                             enable_backups_string);
     let record_str = format!("doctl compute domain records create {} --record-type=A --record-data=%ip_address% --record-name={}", domain.unwrap_or("one.haus"), subdomain);
 
     let _ = chain::CommandChain::new()

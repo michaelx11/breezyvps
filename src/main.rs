@@ -14,7 +14,8 @@ fn sc_doctl(doctl_matches: &clap::ArgMatches) {
                 // Both are unwrapped safely with defaults [sfo1, 512mb]
                 create_droplet_matches.value_of("region"),
                 create_droplet_matches.value_of("size"),
-                create_droplet_matches.value_of("domain"));
+                create_droplet_matches.value_of("domain"),
+                create_droplet_matches.value_of("backups"));
         } else {
             println!("Missing required name parameter!");
         }
@@ -92,9 +93,17 @@ fn sc_configure(configure_matches: &clap::ArgMatches) {
         }
         return;
     }
-    if let Some(sqlite_matches) = configure_matches.subcommand_matches("install_sqlite3") {
+    if let Some(sqlite_matches) = configure_matches.subcommand_matches("sqlite3") {
         if let Some(host) = sqlite_matches.value_of("host") {
             breezyvps::configure::install_sqlite3(host);
+        } else {
+            println!("Missing required host parameter!");
+        }
+        return;
+    }
+    if let Some(nodejs_matches) = configure_matches.subcommand_matches("nodejs") {
+        if let Some(host) = nodejs_matches.value_of("host") {
+            breezyvps::configure::install_nodejs(host);
         } else {
             println!("Missing required host parameter!");
         }
@@ -112,7 +121,7 @@ fn main() {
     ).unwrap();
 
     let matches = clap_app!(breezyvps =>
-        (version: "0.2.0")
+        (version: "0.2.1")
         (author: "Michael Xu <michaeljxu11@gmail.com>")
         (about: "One stop shop for common command line goodness")
         (@arg verbose: -v ... "Enable verbose output")
@@ -126,6 +135,7 @@ fn main() {
                 (@arg region: -r --region +takes_value "Which region? [sfo1, nyc1, etc..]")
                 (@arg size: -s --size +takes_value "Which size droplet? [512mb, 1gb, 2gb, 4gb, 8gb, 16gb, 32gb, 48gb, 64gb]")
                 (@arg domain: -d --domain +takes_value "Which domain name? [best.haus,log.haus,swarm.link,swarmlink.com,util.in]")
+                (@arg backups: -b --backups +takes_value "[y/n (default)] Should backups be enabled ($1/month)")
             )
             (@subcommand destroy_droplet =>
                 (about: "Destroy a droplet by name")
@@ -164,8 +174,12 @@ fn main() {
                 (about: "Setup iptables to only allow 80,443,22")
                 (@arg host: +required "Host name of the droplet")
             )
-            (@subcommand install_sqlite3 =>
+            (@subcommand sqlite3 =>
                 (about: "Install sqlite3 on Ubuntu")
+                (@arg host: +required "Host name of the droplet")
+            )
+            (@subcommand nodejs =>
+                (about: "Install nodejs on Ubuntu")
                 (@arg host: +required "Host name of the droplet")
             )
         )
